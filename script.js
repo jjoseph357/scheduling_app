@@ -1,37 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- MODALS AND BUTTONS ---
+    // --- DOM ELEMENTS & STATE ---
     const calendarEl = document.getElementById('calendar');
     const scheduleModal = document.getElementById('schedule-modal');
+    const equipmentDropdown = document.getElementById('equipment-dropdown');
     const manageListsModal = document.getElementById('manage-lists-modal');
-    const ownerLoginBtn = document.getElementById('owner-login-btn');
-    const manageListsBtn = document.getElementById('manage-lists-btn');
-    const saveChangesBtn = document.getElementById('save-changes-btn');
+    let scheduleData = {}, isOwner = false;
     
-    // --- MASTER DATA (MANAGEABLE BY OWNER) ---
-    // IMPORTANT: To make permanent changes, the owner must update these arrays here in the script.js file.
+    // --- MASTER DATA ---
     let names = ["Lyndon", "Jack", "Miles", "Caden", "Mike", "Ariel", "Peter", "Perry", "Grant", "Frank", "Mackinnon", "Noah", "Oscar"];
-    let equipmentList = [
-        "Excavator - 250 X4", "Excavator - 250 X3", "Loader", "Track Loader", "Standard Dodge",
-        "Skidsteer - 590", "Excavator - Mini", "Skidsteer - 770", "Tandem - #15", "Pile Truck",
-        "Excavator - 2800", "Tandem - #1", "Gas Chevrolet C/w Trailer", "Skidsteer - S70",
-        "2025 Ford C/w Trailer", "Tandem - #20", "Ford F-250", "Tandem - #4",
-        "Water and Sewer Truck", "Skidsteer - T250"
-    ];
-
-    // --- APP STATE ---
-    let scheduleData = {};
-    let isOwner = false;
-    let currentEditingPerson = null; // Track who we are adding equipment for
-
+    let equipmentList = ["Excavator - 250 X4", "Excavator - 250 X3", "Loader", "Track Loader", "Standard Dodge", "Skidsteer - 590", "Excavator - Mini", "Skidsteer - 770", "Tandem - #15", "Pile Truck", "Excavator - 2800", "Tandem - #1", "Gas Chevrolet C/w Trailer", "Skidsteer - S70", "2025 Ford C/w Trailer", "Tandem - #20", "Ford F-250", "Tandem - #4", "Water and Sewer Truck", "Skidsteer - T250"];
 
     // --- INITIALIZATION ---
     fetch('schedule.json')
-        .then(response => response.ok ? response.json() : Promise.reject(response.status))
-        .then(data => {
-            scheduleData = data || {};
-            renderCalendar();
-        })
-        .catch(e => console.error("Error loading schedule.json:", e));
+        .then(res => res.ok ? res.json() : Promise.reject(`Error ${res.status}: Could not load schedule.json.`))
+        .then(data => { scheduleData = data || {}; renderCalendar(); })
+        .catch(e => { console.error(e); calendarEl.innerHTML = `<p style="color:red; text-align:center;">${e}</p>`; });
 
     function renderCalendar() {
         const calendar = new FullCalendar.Calendar(calendarEl, {
@@ -42,268 +25,204 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
 
-    // --- MODAL DISPLAY LOGIC ---
     function openScheduleModalForDate(dateStr) {
-        // This function now primarily handles displaying data. Editing is separate.
+        // 1. Lock the scroll on the main page FIRST. This causes the layout shift.
+        document.body.classList.add('noscroll');
+
+        // 2. Populate the modal with all the necessary data while it's still hidden.
         document.getElementById('modal-date').textContent = new Date(dateStr + 'T00:00:00').toDateString();
         const dailySchedule = scheduleData[dateStr] || {};
-        renderShopInfo(dailySchedule['Shop']);
-        renderPersonnelTable(dailySchedule);
+        renderShopInfo(dailySchedule['Shop'], dateStr);
+        renderPersonnelTable(dailySchedule, dateStr);
+        document.getElementById('final-json-output').style.display = 'none';
+        document.getElementById('owner-save-area').style.display = isOwner ? 'block' : 'none';
+        
         if (isOwner) {
-            document.getElementById('owner-controls').style.display = 'block';
-            renderEditingForm(dateStr);
+            makeTablesEditable(dateStr);
         }
+        
+        // 3. NOW, make the modal visible. The user won't see the layout shift.
         scheduleModal.style.display = 'block';
     }
 
-    function getPdfLink(pdfPath) {
-        if (!pdfPath) return '';
-        const fileName = pdfPath.split('/').pop(); // Extracts filename from path
-        return `<a href="${pdfPath}" target="_blank">${fileName}</a>`;
+    function closeScheduleModal() {
+        scheduleModal.style.display = 'none';
+        document.body.classList.remove('noscroll'); // Restore scrollbar
     }
 
-    function renderShopInfo(shopData) {
-        const shopDetails = document.getElementById('shop-details');
+
+
+    function renderShopInfo(shopData, dateStr) {
         const assignment = shopData || { equipment: [], notes: '', pdf: '' };
-        const equipmentText = assignment.equipment.length > 0 ? assignment.equipment.join(', ') : 'None';
-        
-        shopDetails.innerHTML = `
+        document.getElementById('shop-details').innerHTML = `
             <h3><span style="font-weight:900;"></span> SHOP</h3>
-            <p><strong>Equipment Assigned:</strong> ${equipmentText}</p>
-            <p><strong>Notes:</strong> ${assignment.notes || 'N/A'}</p>
-            <p><strong>PDF:</strong> ${getPdfLink(assignment.pdf)}</p>
-        `;
+            <table id="shop-table"><tbody>
+                <tr><th>Assigned Equipment</th><td data-field="equipment" data-name="Shop">${renderEquipmentTags(assignment.equipment, 'Shop', dateStr)}</td></tr>
+                <tr><th>Notes</th><td data-field="notes" data-name="Shop">${assignment.notes}</td></tr>
+                <tr><th>PDF</th><td data-field="pdf" data-name="Shop">${getPdfLink(assignment.pdf)}</td></tr>
+            </tbody></table>`;
     }
 
-    function renderPersonnelTable(dailySchedule) {
-        const scheduleDetails = document.getElementById('schedule-details');
-        let html = '<table><tr><th>Name</th><th>Task</th><th>Equipment</th><th>Notes</th><th>PDF</th></tr>';
-        
+    function renderPersonnelTable(dailySchedule, dateStr) {
+        let html = '<table id="personnel-table"><thead><tr><th>Name</th><th>Task</th><th>Equipment</th><th>Notes</th><th>PDF</th></tr></thead><tbody>';
         names.forEach(name => {
             const assignment = dailySchedule[name] || { task: '', equipment: [], notes: '', pdf: '' };
-            const equipmentText = assignment.equipment.length > 0 ? assignment.equipment.join('<br>') : '';
-            
-            html += `<tr>
-                <td>${name}</td>
-                <td>${assignment.task}</td>
-                <td>${equipmentText}</td>
-                <td>${assignment.notes}</td>
-                <td>${getPdfLink(assignment.pdf)}</td>
-            </tr>`;
+            html += `<tr data-name="${name}">
+                        <td>${name}</td>
+                        <td data-field="task">${assignment.task}</td>
+                        <td data-field="equipment">${renderEquipmentTags(assignment.equipment, name, dateStr)}</td>
+                        <td data-field="notes">${assignment.notes}</td>
+                        <td data-field="pdf">${getPdfLink(assignment.pdf)}</td>
+                    </tr>`;
         });
-        html += '</table>';
-        scheduleDetails.innerHTML = html;
+        html += '</tbody></table>';
+        document.getElementById('schedule-details').innerHTML = html;
     }
 
-    // --- OWNER EDITING LOGIC ---
-    function renderEditingForm(dateStr) {
-        const editForm = document.getElementById('edit-form');
-        editForm.innerHTML = ''; // Clear previous form
-        editForm.dataset.date = dateStr; // Store current date on the form
-
-        // Render editor for Shop and each person
-        ['Shop', ...names].forEach(name => {
-            const editorDiv = createPersonEditor(name, dateStr);
-            editForm.appendChild(editorDiv);
-        });
-        updateAllEquipmentDisplays(dateStr); // Initial render of equipment tags
+    function renderEquipmentTags(equipmentArray, name, dateStr) {
+        if (!Array.isArray(equipmentArray) || equipmentArray.length === 0) return '';
+        return equipmentArray.map(equip =>
+            `<span class="equipment-tag">${equip}
+                ${isOwner ? `<button class="remove-tag-btn" data-equip="${equip}" data-name="${name}">×</button>` : ''}
+            </span>`).join('');
     }
 
-
-    function createPersonEditor(name, dateStr) {
-        const dailySchedule = scheduleData[dateStr] || {};
-        const assignment = dailySchedule[name] || { task: '', equipment: [], notes: '', pdf: '' };
-
-        const container = document.createElement('div');
-        container.className = 'person-editor';
-        container.id = `editor-for-${name}`;
-        container.dataset.name = name; // Store name for easy access
-
-        let taskInput = name !== 'Shop' ? `<input type="text" value="${assignment.task || ''}" placeholder="Task" data-field="task">` : '';
-
-        container.innerHTML = `
-            <h4>${name}</h4>
-            ${taskInput}
-            <input type="text" value="${assignment.notes || ''}" placeholder="Notes" data-field="notes">
-            <input type="text" value="${assignment.pdf || ''}" placeholder="Path to PDF" data-field="pdf">
-            <p><strong>Equipment:</strong></p>
-            <div class="equipment-assignment-area" data-field="equipment-tags">
-                <!-- Assigned equipment tags will be rendered here by JS -->
-            </div>
-            <button type="button" class="add-equipment-btn">Add Equipment</button>
-        `;
-
-        container.querySelector('.add-equipment-btn').addEventListener('click', () => {
-            showEquipmentSelector(name, dateStr);
-        });
-        
-        return container;
-    }
-
-    function updateAllEquipmentDisplays(dateStr) {
-        const dailySchedule = scheduleData[dateStr] || {};
-        const allPeople = ['Shop', ...names];
-
-        allPeople.forEach(name => {
-            const assignment = dailySchedule[name] || { equipment: [] };
-            const tagsContainer = document.querySelector(`#editor-for-${name} [data-field='equipment-tags']`);
-            if (!tagsContainer) return;
-            
-            tagsContainer.innerHTML = ''; // Clear old tags
-            assignment.equipment.forEach(equip => {
-                const tag = document.createElement('span');
-                tag.className = 'assigned-equipment-tag';
-                tag.textContent = equip;
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-equipment-btn';
-                removeBtn.innerHTML = '×';
-                removeBtn.onclick = () => {
-                    // Remove from temporary data and re-render
-                    const personSched = dailySchedule[name];
-                    personSched.equipment = personSched.equipment.filter(e => e !== equip);
-                    updateAllEquipmentDisplays(dateStr);
-                };
-                tag.appendChild(removeBtn);
-                tagsContainer.appendChild(tag);
+    // --- IN-PLACE EDITING LOGIC ---
+    function makeTablesEditable(dateStr) {
+        ['#shop-table', '#personnel-table'].forEach(selector => {
+            const table = document.querySelector(selector);
+            if (!table) return;
+            table.addEventListener('dblclick', (e) => handleDoubleClick(e.target, dateStr));
+            table.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-tag-btn')) handleRemoveTag(e.target, dateStr);
             });
         });
     }
 
-    function showEquipmentSelector(personName, dateStr) {
-        currentEditingPerson = personName; // Set context
+    function handleDoubleClick(target, dateStr) {
+        const cell = target.closest('td');
+        if (!cell || cell.querySelector('textarea, input')) return;
+        const field = cell.dataset.field;
+        const name = cell.dataset.name || cell.closest('tr').dataset.name;
+        if (!field || !name) return;
+
+        const currentValue = scheduleData[dateStr]?.[name]?.[field] || '';
+
+        if (field === 'equipment') {
+            showEquipmentDropdown(cell, name, dateStr);
+        } else if (field === 'task' || field === 'notes') {
+            cell.innerHTML = `<textarea class="editing-textarea">${currentValue}</textarea>`;
+            const textarea = cell.querySelector('textarea');
+            autoGrow(textarea); // Set initial size
+            textarea.focus();
+            textarea.addEventListener('input', () => autoGrow(textarea));
+            textarea.addEventListener('blur', () => saveEdit(textarea, cell, name, field, dateStr));
+            textarea.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); textarea.blur(); }});
+        }
+    }
+    
+    function autoGrow(element) {
+        element.style.height = 'auto';
+        element.style.height = (element.scrollHeight) + 'px';
+    }
+
+    function saveEdit(inputElement, cell, name, field, dateStr) {
+        if (!scheduleData[dateStr]) scheduleData[dateStr] = {};
+        if (!scheduleData[dateStr][name]) scheduleData[dateStr][name] = { task: '', notes: '', pdf: '', equipment: [] };
+        scheduleData[dateStr][name][field] = inputElement.value;
+        cell.innerHTML = (field === 'pdf') ? getPdfLink(inputElement.value) : inputElement.value;
+    }
+
+    function showEquipmentDropdown(cell, name, dateStr) {
+        const listDiv = document.getElementById('equipment-dropdown-list');
         const dailySchedule = scheduleData[dateStr] || {};
-        
-        const assignedEquipment = new Set();
-        Object.values(dailySchedule).forEach(p => {
-            if (p.equipment) p.equipment.forEach(e => assignedEquipment.add(e));
-        });
-        
+        const assignedEquipment = new Set(Object.values(dailySchedule).flatMap(p => p.equipment || []));
         const availableEquipment = equipmentList.filter(e => !assignedEquipment.has(e));
-        
-        const listDiv = document.getElementById('available-equipment-list');
-        listDiv.innerHTML = ''; // Clear previous list
-        
-        if (availableEquipment.length === 0) {
-            listDiv.innerHTML = '<div class="item">No more equipment available for this day.</div>';
-        } else {
+        listDiv.innerHTML = '';
+        if (availableEquipment.length > 0) {
             availableEquipment.forEach(equip => {
                 const item = document.createElement('div');
                 item.className = 'item';
                 item.textContent = equip;
-                item.onclick = () => {
-                    // Add equipment to the person in the temporary schedule data
-                    if (!dailySchedule[currentEditingPerson]) {
-                        dailySchedule[currentEditingPerson] = { task: '', equipment: [], notes: '', pdf: '' };
-                    }
-                    dailySchedule[currentEditingPerson].equipment.push(equip);
-                    
-                    // Re-render the tags and close the selector
-                    updateAllEquipmentDisplays(dateStr);
-                    equipmentSelectorModal.style.display = 'none';
-                };
+                item.onclick = () => addEquipmentToPerson(equip, name, dateStr);
                 listDiv.appendChild(item);
             });
+        } else {
+            listDiv.innerHTML = '<div class="item" style="cursor:default;">No equipment available</div>';
         }
-        equipmentSelectorModal.style.display = 'block';
+        const cellRect = cell.getBoundingClientRect();
+        equipmentDropdown.style.left = `${cellRect.left}px`;
+        equipmentDropdown.style.top = `${cellRect.bottom}px`;
+        equipmentDropdown.style.display = 'block';
+        document.body.classList.add('noscroll');
     }
 
-    // --- SAVE LOGIC ---
-    saveChangesBtn.addEventListener('click', () => {
-        const editForm = document.getElementById('edit-form');
-        const dateStr = editForm.dataset.date;
-        let dailySchedule = { ...scheduleData[dateStr] }; // Work on a copy
+    function hideEquipmentDropdown() {
+        equipmentDropdown.style.display = 'none';
+    }
 
-        document.querySelectorAll('.person-editor').forEach(editor => {
-            const name = editor.dataset.name;
-            if (!dailySchedule[name]) dailySchedule[name] = {};
+    function addEquipmentToPerson(equip, name, dateStr) {
+        if (!scheduleData[dateStr]) scheduleData[dateStr] = {};
+        if (!scheduleData[dateStr][name]) scheduleData[dateStr][name] = { task: '', notes: '', pdf: '', equipment: [] };
+        if (!Array.isArray(scheduleData[dateStr][name].equipment)) scheduleData[dateStr][name].equipment = [];
+        
+        scheduleData[dateStr][name].equipment.push(equip);
+        hideEquipmentDropdown();
+        openScheduleModalForDate(dateStr); // This re-renders the modal, which keeps the scroll locked
+    }
 
-            // Read equipment from the tags
-            const equipmentTags = editor.querySelectorAll('.assigned-equipment-tag');
-            const assignedEquip = Array.from(equipmentTags).map(tag => tag.firstChild.textContent);
-            
-            dailySchedule[name].equipment = assignedEquip;
-            dailySchedule[name].notes = editor.querySelector('[data-field="notes"]').value;
-            dailySchedule[name].pdf = editor.querySelector('[data-field="pdf"]').value;
-            if (name !== 'Shop') {
-                dailySchedule[name].task = editor.querySelector('[data-field="task"]').value;
-            }
-        });
-
-        scheduleData[dateStr] = dailySchedule; // Commit changes to main data object
-
-        // Display JSON for owner to copy
-        const updatedJson = JSON.stringify(scheduleData, null, 2);
-        editForm.innerHTML = `<p class="warning"><strong>SAVE COMPLETE!</strong> Manually copy the text below and paste it into your <code>schedule.json</code> file on GitHub.</p><textarea style="width:100%; height: 300px;" readonly>${updatedJson}</textarea>`;
-    });
-
-
-    // --- OWNER LOGIN & LIST MANAGEMENT ---
-    ownerLoginBtn.addEventListener('click', () => {
-        const secret = prompt("Please enter the secret word:");
-        if (secret === "a") { // Replace "yourSecretWord" with your actual secret
-            isOwner = true;
-            document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'inline-block');
-            alert("Owner access granted. You can now edit schedules and manage lists.");
-        } else {
-            alert("Incorrect secret word.");
-        }
-    });
-
-    manageListsBtn.addEventListener('click', () => {
-        populateListManagementModal();
-        manageListsModal.style.display = 'block';
-    });
-
+    function handleRemoveTag(target, dateStr) {
+        const { equip, name } = target.dataset;
+        const equipArray = scheduleData[dateStr]?.[name]?.equipment || [];
+        scheduleData[dateStr][name].equipment = equipArray.filter(e => e !== equip);
+        openScheduleModalForDate(dateStr);
+    }
+    
+    // --- HELPER & OWNER LOGIC ---
+    function getPdfLink(pdfPath) { if (!pdfPath) return ''; const fileName = pdfPath.split('/').pop(); return `<a href="${pdfPath}" target="_blank" rel="noopener noreferrer">${fileName}</a>`; }
+    document.getElementById('owner-login-btn').addEventListener('click', () => { const secret = prompt("Please enter the secret word:"); if (secret === "yourSecretWord") { isOwner = true; document.getElementById('manage-lists-btn').style.display = 'inline-block'; alert("Owner access granted. Double-click on a cell to edit its content."); } else { isOwner = false; alert("Incorrect secret word."); }});
+    document.getElementById('generate-json-btn').addEventListener('click', () => { const outputArea = document.getElementById('final-json-output'); outputArea.value = JSON.stringify(scheduleData, null, 2); outputArea.style.display = 'block'; outputArea.select(); alert("JSON has been generated below. Copy this content and paste it into the schedule.json file on GitHub."); });
+    
+    // --- LIST MANAGEMENT MODAL LOGIC ---
+    document.getElementById('manage-lists-btn').addEventListener('click', () => { populateListManagementModal(); manageListsModal.style.display = 'block'; });
     function populateListManagementModal() {
         const namesListDiv = document.getElementById('names-list');
         const equipmentListDiv = document.getElementById('equipment-list');
-        namesListDiv.innerHTML = names.map(n => `<div class="list-item"><span>${n}</span><button data-name="${n}" class="remove-name-btn">×</button></div>`).join('');
-        equipmentListDiv.innerHTML = equipmentList.map(e => `<div class="list-item"><span>${e}</span><button data-equip="${e}" class="remove-equip-btn">×</button></div>`).join('');
-        
-        // Add event listeners for new remove buttons
-        document.querySelectorAll('.remove-name-btn').forEach(btn => btn.onclick = (e) => {
-            names = names.filter(n => n !== e.target.dataset.name);
-            populateListManagementModal(); // Re-render
-        });
-        document.querySelectorAll('.remove-equip-btn').forEach(btn => btn.onclick = (e) => {
-            equipmentList = equipmentList.filter(eq => eq !== e.target.dataset.equip);
-            populateListManagementModal(); // Re-render
-        });
+        namesListDiv.innerHTML = names.map(n => `<div class="list-item"><span>${n}</span><button data-name="${n}" class="remove-tag-btn">×</button></div>`).join('');
+        equipmentListDiv.innerHTML = equipmentList.map(e => `<div class="list-item"><span>${e}</span><button data-equip="${e}" class="remove-tag-btn">×</button></div>`).join('');
+        namesListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => btn.onclick = (e) => { names = names.filter(n => n !== e.target.dataset.name); populateListManagementModal(); });
+        equipmentListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => btn.onclick = (e) => { equipmentList = equipmentList.filter(eq => eq !== e.target.dataset.equip); populateListManagementModal(); });
     }
-    
-    document.getElementById('add-name-btn').addEventListener('click', () => {
-        const newName = document.getElementById('new-name-input').value.trim();
-        if (newName && !names.includes(newName)) {
-            names.push(newName);
-            populateListManagementModal();
-            document.getElementById('new-name-input').value = '';
-        }
+    document.getElementById('add-name-btn').addEventListener('click', () => { const input = document.getElementById('new-name-input'); const value = input.value.trim(); if (value && !names.includes(value)) { names.push(value); populateListManagementModal(); input.value = ''; } });
+    document.getElementById('add-equipment-btn').addEventListener('click', () => { const input = document.getElementById('new-equipment-input'); const value = input.value.trim(); if (value && !equipmentList.includes(value)) { equipmentList.push(value); populateListManagementModal(); input.value = ''; } });
+    document.getElementById('generate-code-btn').addEventListener('click', () => { const code = `// Copy and paste this entire block into your script.js file to save changes.\n\nlet names = ${JSON.stringify(names, null, 4)};\n\nlet equipmentList = ${JSON.stringify(equipmentList, null, 4)};`; document.getElementById('generated-code-output').value = code; });
+
+    // --- MODAL & DROPDOWN CLOSE LOGIC ---
+    // Close the schedule modal
+    document.querySelector('#schedule-modal .close-btn').addEventListener('click', closeScheduleModal);
+
+    // Close the list management modal (doesn't need scroll lock)
+    document.querySelector('#manage-lists-modal .close-btn').addEventListener('click', () => {
+        manageListsModal.style.display = 'none';
     });
 
-    document.getElementById('add-equipment-btn').addEventListener('click', () => {
-        const newEquip = document.getElementById('new-equipment-input').value.trim();
-        if (newEquip && !equipmentList.includes(newEquip)) {
-            equipmentList.push(newEquip);
-            populateListManagementModal();
-            document.getElementById('new-equipment-input').value = '';
-        }
-    });
+    // Close the equipment dropdown
+    document.getElementById('close-dropdown-btn').addEventListener('click', hideEquipmentDropdown);
 
-    document.getElementById('generate-code-btn').addEventListener('click', () => {
-        const code = `// --- MASTER DATA (MANAGEABLE BY OWNER) ---
-// Copy and paste this entire block into your script.js file to save changes.
-
-let names = ${JSON.stringify(names, null, 4)};
-
-let equipmentList = ${JSON.stringify(equipmentList, null, 4)};`;
-        document.getElementById('generated-code-output').value = code;
-    });
-
-    // --- GENERIC MODAL CLOSE LOGIC ---
-    document.querySelectorAll('.modal .close-btn').forEach(btn => btn.onclick = () => btn.closest('.modal').style.display = 'none');
+    // Handle clicks outside of modals/dropdowns
     window.addEventListener('click', (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
+        // If user clicks the background of the schedule modal
+        if (event.target === scheduleModal) {
+            closeScheduleModal();
+        }
+        // If user clicks the background of the list management modal
+        if (event.target === manageListsModal) {
+            manageListsModal.style.display = 'none';
+        }
+        // If user clicks outside of the equipment dropdown
+        if (equipmentDropdown.style.display === 'block' && !equipmentDropdown.contains(event.target) && !event.target.closest('td[data-field="equipment"]')) {
+            hideEquipmentDropdown();
         }
     });
+
 });

@@ -1,1 +1,48 @@
-{}
+{
+  "2025-08-01": {
+    "Lyndon": {
+      "task": "Hree",
+      "notes": "HEre",
+      "pdf": "",
+      "equipment": []
+    },
+    "Jack": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Mackinnon": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "ABC Machine"
+      ]
+    },
+    "Noah": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Frank": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Perry": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Caden": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    }
+  }
+}
