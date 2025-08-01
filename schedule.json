@@ -1,0 +1,27 @@
+{
+  "2025-08-26": {
+    "Lyndon": {
+      "task": "Site Prep",
+      "equipment": "Excavator - 250 X4",
+      "notes": "Start at the north end.",
+      "pdf": "pdfs/site-plan-north.pdf"
+    },
+    "Jack": {
+      "task": "Material Transport",
+      "equipment": "Tandem - #15",
+      "notes": "",
+      "pdf": ""
+    }
+  },
+  "2025-08-27": {
+    "Caden": {
+        "task": "Digging foundation",
+        "equipment": "Excavator - Mini",
+        "notes": "Beware of underground utilities.",
+        "pdf": ""
+    },
+    "Shop": {
+        "equipment_reserved": ["Loader"]
+    }
+  }
+}
