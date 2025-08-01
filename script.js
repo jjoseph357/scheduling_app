@@ -244,27 +244,109 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     // --- HELPER & OWNER LOGIC ---
-    function getPdfLink(pdfPath) { if (!pdfPath) return ''; const fileName = pdfPath.split('/').pop(); return `<a href="${pdfPath}" target="_blank" rel="noopener noreferrer">${fileName}</a>`; }
-    document.getElementById('owner-login-btn').addEventListener('click', () => { const secret = prompt("Please enter the secret word:"); if (secret === "yourSecretWord") { isOwner = true; document.getElementById('manage-lists-btn').style.display = 'inline-block'; alert("Owner access granted. Double-click on a cell to edit its content."); } else { isOwner = false; alert("Incorrect secret word."); }});
-    document.getElementById('generate-json-btn').addEventListener('click', () => { const outputArea = document.getElementById('final-json-output'); outputArea.value = JSON.stringify(scheduleData, null, 2); outputArea.style.display = 'block'; outputArea.select(); alert("JSON has been generated below. Copy this content and paste it into the schedule.json file on GitHub."); });
-    
+    function getPdfLink(pdfPath) {
+        if (!pdfPath) return '';
+        const fileName = pdfPath.split('/').pop();
+        return `<a href="${pdfPath}" target="_blank" rel="noopener noreferrer">${fileName}</a>`;
+    }
+
+    document.getElementById('owner-login-btn').addEventListener('click', () => {
+        const secret = prompt("Please enter the secret word:");
+        if (secret === "password") {
+            isOwner = true;
+            document.getElementById('manage-lists-btn').style.display = 'inline-block';
+            alert("Owner access granted. Double-click on a cell to edit its content.");
+        } else {
+            isOwner = false;
+            alert("Incorrect secret word.");
+        }
+    });
+
+    document.getElementById('generate-json-btn').addEventListener('click', () => {
+        const outputArea = document.getElementById('final-json-output');
+        outputArea.value = JSON.stringify(scheduleData, null, 2);
+        outputArea.style.display = 'block';
+        outputArea.select();
+        alert("JSON has been generated below. Copy this content and paste it into the schedule.json file on GitHub.");
+    });
+
     // --- LIST MANAGEMENT MODAL LOGIC ---
-    document.getElementById('manage-lists-btn').addEventListener('click', () => { populateListManagementModal(); manageListsModal.style.display = 'block'; });
+    document.getElementById('manage-lists-btn').addEventListener('click', () => {
+        populateListManagementModal();
+        manageListsModal.style.display = 'block';
+    });
+
     function populateListManagementModal() {
         const namesListDiv = document.getElementById('names-list');
         const equipmentListDiv = document.getElementById('equipment-list');
-        namesListDiv.innerHTML = names.map(n => `<div class="list-item"><span>${n}</span><button data-name="${n}" class="remove-tag-btn">×</button></div>`).join('');
-        equipmentListDiv.innerHTML = equipmentList.map(e => `<div class="list-item"><span>${e}</span><button data-equip="${e}" class="remove-tag-btn">×</button></div>`).join('');
-        namesListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => btn.onclick = (e) => { names = names.filter(n => n !== e.target.dataset.name); populateListManagementModal(); });
-        equipmentListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => btn.onclick = (e) => { equipmentList = equipmentList.filter(eq => eq !== e.target.dataset.equip); populateListManagementModal(); });
+
+        namesListDiv.innerHTML = names.map(n =>
+            `<div class="list-item"><span>${n}</span><button data-name="${n}" class="remove-tag-btn">×</button></div>`
+        ).join('');
+
+        equipmentListDiv.innerHTML = equipmentList.map(e =>
+            `<div class="list-item"><span>${e}</span><button data-equip="${e}" class="remove-tag-btn">×</button></div>`
+        ).join('');
+
+        namesListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                names = names.filter(n => n !== e.target.dataset.name);
+                populateListManagementModal();
+            };
+        });
+
+        equipmentListDiv.querySelectorAll('.remove-tag-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                equipmentList = equipmentList.filter(eq => eq !== e.target.dataset.equip);
+                populateListManagementModal();
+            };
+        });
     }
-    document.getElementById('add-name-btn').addEventListener('click', () => { const input = document.getElementById('new-name-input'); const value = input.value.trim(); if (value && !names.includes(value)) { names.push(value); populateListManagementModal(); input.value = ''; } });
-    document.getElementById('add-equipment-btn').addEventListener('click', () => { const input = document.getElementById('new-equipment-input'); const value = input.value.trim(); if (value && !equipmentList.includes(value)) { equipmentList.push(value); populateListManagementModal(); input.value = ''; } });
-    document.getElementById('generate-code-btn').addEventListener('click', () => { const code = `// Copy and paste this entire block into your script.js file to save changes.\n\nlet names = ${JSON.stringify(names, null, 4)};\n\nlet equipmentList = ${JSON.stringify(equipmentList, null, 4)};`; document.getElementById('generated-code-output').value = code; });
+
+    document.getElementById('add-name-btn').addEventListener('click', () => {
+        const input = document.getElementById('new-name-input');
+        const value = input.value.trim();
+        if (value && !names.includes(value)) {
+            names.push(value);
+            populateListManagementModal();
+            input.value = '';
+        }
+    });
+
+    document.getElementById('add-equipment-btn').addEventListener('click', () => {
+        const input = document.getElementById('new-equipment-input');
+        const value = input.value.trim();
+        if (value && !equipmentList.includes(value)) {
+            equipmentList.push(value);
+            populateListManagementModal();
+            input.value = '';
+        }
+    });
+
+    document.getElementById('generate-code-btn').addEventListener('click', () => {
+        const code = `// Copy and paste this entire block into your script.js file to save changes.\n\n` +
+            `let names = ${JSON.stringify(names, null, 4)};\n\n` +
+            `let equipmentList = ${JSON.stringify(equipmentList, null, 4)};`;
+        document.getElementById('generated-code-output').value = code;
+    });
 
     // --- MODAL & DROPDOWN CLOSE LOGIC ---
     document.querySelector('#schedule-modal .close-btn').addEventListener('click', closeScheduleModal);
-    document.querySelector('#manage-lists-modal .close-btn').addEventListener('click', () => { manageListsModal.style.display = 'none'; });
+
+    document.querySelector('#manage-lists-modal .close-btn').addEventListener('click', () => {
+        manageListsModal.style.display = 'none';
+    });
+
     document.getElementById('close-dropdown-btn').addEventListener('click', hideEquipmentDropdown);
-    window.addEventListener('click', (event) => { if (event.target === scheduleModal) closeScheduleModal(); if (event.target === manageListsModal) manageListsModal.style.display = 'none'; if (equipmentDropdown.style.display === 'block' && !equipmentDropdown.contains(event.target) && !event.target.closest('td[data-field="equipment"]')) hideEquipmentDropdown(); });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === scheduleModal) closeScheduleModal();
+        if (event.target === manageListsModal) manageListsModal.style.display = 'none';
+
+        const isOutsideDropdown = equipmentDropdown.style.display === 'block' &&
+            !equipmentDropdown.contains(event.target) &&
+            !event.target.closest('td[data-field="equipment"]');
+
+        if (isOutsideDropdown) hideEquipmentDropdown();
+    });
 });
