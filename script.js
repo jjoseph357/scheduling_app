@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
             initialView: 'dayGridMonth',
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek,dayGridDay' },
             dateClick: (info) => openScheduleModalForDate(info.dateStr),
-            // This is crucial for multi-line events
             eventDisplay: 'block',
 
             events: function(fetchInfo, successCallback, failureCallback) {
@@ -30,33 +29,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     const dayData = scheduleData[dateStr];
                     if (!dayData || Object.keys(dayData).length === 0) continue;
 
-                    // Initialize counters for the new summary
                     let peopleWithTasks = 0;
-                    const equipmentInUse = new Set();
-                    const equipmentInShop = new Set();
+                    const totalEquipmentInUse = new Set(); // Unified set for ALL used equipment
+                    const equipmentInShop = new Set();     // Specific set for just the shop
                     let noteCount = 0;
                     let pdfCount = 0;
 
-                    // Loop through all entries for the day (people + shop)
                     for (const name in dayData) {
                         const assignment = dayData[name];
                         if (!assignment) continue;
 
-                        // Tally staff tasks
                         if (names.includes(name) && assignment.task && assignment.task.trim() !== '') {
                             peopleWithTasks++;
                         }
 
-                        // Tally equipment, separating staff use from shop assignment
                         if (assignment.equipment && assignment.equipment.length > 0) {
-                            if (name === 'Shop') {
-                                assignment.equipment.forEach(e => equipmentInShop.add(e));
-                            } else {
-                                assignment.equipment.forEach(e => equipmentInUse.add(e));
-                            }
+                            assignment.equipment.forEach(e => {
+                                // Add to the total "in use" set regardless of who has it
+                                totalEquipmentInUse.add(e);
+                                
+                                // If it's the shop, also add it to the specific shop counter
+                                if (name === 'Shop') {
+                                    equipmentInShop.add(e);
+                                }
+                            });
                         }
 
-                        // Tally notes and PDFs
                         if (assignment.notes && assignment.notes.trim() !== '') {
                             noteCount++;
                         }
@@ -65,13 +63,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
 
-                    // Build the summary text lines array
                     const summaryLines = [];
                     if (peopleWithTasks > 0) {
                         summaryLines.push(`${peopleWithTasks} / ${names.length} staff on tasks`);
                     }
-                    if (equipmentInUse.size > 0) {
-                        summaryLines.push(`${equipmentInUse.size} / ${equipmentList.length} equipment in use`);
+                    // This line now uses the unified counter
+                    if (totalEquipmentInUse.size > 0) {
+                        summaryLines.push(`${totalEquipmentInUse.size} / ${equipmentList.length} equipment in use`);
                     }
                     if (equipmentInShop.size > 0) {
                         summaryLines.push(`${equipmentInShop.size} equipment in shop`);
@@ -83,10 +81,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         summaryLines.push(`${pdfCount} ${pdfCount > 1 ? 'PDFs' : 'PDF'} inserted`);
                     }
 
-                    // Only create an event if there is something to summarize
                     if (summaryLines.length > 0) {
                         calendarEvents.push({
-                            title: summaryLines.join('\n'), // Use newline to separate lines
+                            title: summaryLines.join('\n'),
                             start: dateStr,
                             allDay: true,
                         });
@@ -96,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         calendar.render();
+
     }
 
     function openScheduleModalForDate(dateStr) {
