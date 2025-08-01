@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "express": "^5.1.0",
     "fullcalendar": "^6.1.18"
   }
 }

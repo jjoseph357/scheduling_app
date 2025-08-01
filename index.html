@@ -2,29 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- CRITICAL: This tag makes the site mobile-friendly -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scheduling App</title>
     <link rel="stylesheet" href="style.css">
-    <!-- FullCalendar CSS -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 </head>
 <body>
     <header>
         <h1>Daily Schedule</h1>
-        <button id="owner-login-btn">Owner Access</button>
+        <div>
+            <button id="manage-lists-btn" class="owner-only" style="display: none;">Manage Lists</button>
+            <button id="owner-login-btn">Owner Access</button>
+        </div>
     </header>
 
     <main>
         <div id='calendar'></div>
     </main>
 
-    <!-- Modal for displaying and editing schedule details -->
+    <!-- Main Schedule Modal -->
     <div id="schedule-modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn">&times;</span>
+            <span class="close-btn">×</span>
             <h2 id="modal-date"></h2>
+            <div id="shop-details"></div>
             <div id="schedule-details"></div>
-            <div id="owner-controls" style="display: none;">
+            <div id="owner-controls" class="owner-only" style="display: none;">
                 <h3>Edit Schedule</h3>
                 <div id="edit-form"></div>
                 <button id="save-changes-btn">Save Changes</button>
@@ -32,7 +36,39 @@
         </div>
     </div>
 
-    <!-- FullCalendar JS -->
+    <!-- Owner List Management Modal -->
+    <div id="manage-lists-modal" class="modal">
+        <!-- ... (no changes needed in this modal's HTML) ... -->
+        <div class="modal-content">
+            <span class="close-btn">×</span>
+            <h2>Manage Master Lists</h2>
+            <p class="warning"><strong>Important:</strong> Changes made here are temporary for this session. To make them permanent, click "Generate Code" and replace the corresponding arrays in your <code>script.js</code> file.</p>
+            <div class="list-management-container">
+                <div class="list-section">
+                    <h3>Manage Names</h3>
+                    <div id="names-list"></div>
+                    <input type="text" id="new-name-input" placeholder="Enter new name"><button id="add-name-btn">Add</button>
+                </div>
+                <div class="list-section">
+                    <h3>Manage Equipment</h3>
+                    <div id="equipment-list"></div>
+                    <input type="text" id="new-equipment-input" placeholder="Enter new equipment"><button id="add-equipment-btn">Add</button>
+                </div>
+            </div>
+            <hr>
+            <button id="generate-code-btn">Generate Code for script.js</button>
+            <textarea id="generated-code-output" readonly></textarea>
+        </div>
+    </div>
+
+    <!-- Simple modal for equipment selection dropdown -->
+    <div id="equipment-selector-modal" class="modal">
+        <div class="equipment-selector-content">
+            <h3>Select Available Equipment</h3>
+            <div id="available-equipment-list"></div>
+        </div>
+    </div>
+
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
     <script src="script.js"></script>
 </body>
