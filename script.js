@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Owner Login
     ownerLoginBtn.addEventListener('click', () => {
         const secret = prompt("Please enter the secret word:");
-        if (secret === "yourSecretWord") { // Replace "yourSecretWord" with your actual secret
+        if (secret === "secret") { // Replace with secret word
             isOwner = true;
             alert("Owner access granted.");
         } else {
