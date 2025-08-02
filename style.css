@@ -51,27 +51,28 @@ header button:hover {
     padding: 8px 4px;
 }
 
-/* THIS IS THE KEY FIX: Make the day cell frame a positioning context */
+/* Make the day cell frame a positioning context for desktop */
 .fc-daygrid-day-frame {
     position: relative;
 }
 
-/* Position the event container absolutely within the frame */
+/* Position the event container absolutely within the frame on DESKTOP ONLY */
 .fc-daygrid-day-events {
-    position: absolute; /* Take the container out of the layout flow */
-    bottom: 0;          /* Anchor it to the bottom of the cell */
-    left: 0;            /* Anchor it to the left */
-    right: 0;           /* Stretch it to the right */
-    max-height: 5em;    /* Set a max-height to prevent overflow */
-    overflow-y: hidden; /* Hide anything that goes past the max-height */
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 5em;
+    overflow-y: hidden;
 }
 
 /* Style for the event summaries on the calendar */
 .fc-daygrid-event {
     white-space: normal !important;
     align-items: flex-start;
-    padding: 0 4px; /* Adjust padding for a cleaner look */
+    padding: 0 4px;
     margin-bottom: 2px !important; 
+    pointer-events: none; /* THIS IS THE FIX for click-through */
 }
 
 .fc-event-main {
@@ -189,4 +190,9 @@ header button:hover {
     .list-management-container { 
         flex-direction: column; 
     } 
+    .fc-daygrid-day-events {
+        position: static; /* Revert from absolute positioning */
+        max-height: none;   /* Remove the height limit */
+        overflow-y: visible; /* Show all overflowing content */
+    }
 }
