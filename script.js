@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('shop-details').innerHTML = `
             <h3><span style="font-weight:900;"></span> SHOP</h3>
             <table id="shop-table"><tbody>
-                <tr><th>Assigned Equipment</th><td data-field="equipment" data-name="Shop">${renderEquipmentTags(assignment.equipment, 'Shop')}</td></tr>
+                <tr><th>Equipment</th><td data-field="equipment" data-name="Shop">${renderEquipmentTags(assignment.equipment, 'Shop')}</td></tr>
                 <tr><th>Notes</th><td data-field="notes" data-name="Shop">${assignment.notes}</td></tr>
                 <tr><th>PDF</th><td data-field="pdf" data-name="Shop">${getPdfLink(assignment.pdf)}</td></tr>
             </tbody></table>`;
