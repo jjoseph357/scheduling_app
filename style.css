@@ -58,12 +58,10 @@ header button:hover {
 
 /* Position the event container absolutely within the frame on DESKTOP ONLY */
 .fc-daygrid-day-events {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-height: 5em;
-    overflow-y: hidden;
+    position: static; /* Revert from absolute positioning */
+    max-height: none;   /* Remove the height limit */
+    overflow-y: visible; /* Show all overflowing content */
+
 }
 
 /* Style for the event summaries on the calendar */
@@ -72,7 +70,7 @@ header button:hover {
     align-items: flex-start;
     padding: 0 4px;
     margin-bottom: 2px !important; 
-    pointer-events: none; /* THIS IS THE FIX for click-through */
+    pointer-events: none;
 }
 
 .fc-event-main {

@@ -1,10 +1,12 @@
 {
   "2025-08-01": {
     "Lyndon": {
-      "task": "Hree",
-      "notes": "HEre",
+      "task": "Sit down",
+      "notes": "Dentist appointment",
       "pdf": "",
-      "equipment": []
+      "equipment": [
+        "Loader"
+      ]
     },
     "Jack": {
       "task": "",
@@ -17,7 +19,7 @@
       "notes": "",
       "pdf": "",
       "equipment": [
-        "ABC Machine"
+        "Excavator - 250 X3"
       ]
     },
     "Noah": {
@@ -43,6 +45,118 @@
       "notes": "",
       "pdf": "",
       "equipment": []
+    },
+    "Shop": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Track Loader"
+      ]
+    }
+  },
+  "2025-08-06": {
+    "Lyndon": {
+      "task": "Sit down",
+      "notes": "Dentist appointment",
+      "pdf": "Proof",
+      "equipment": [
+        "Loader"
+      ]
+    },
+    "Jack": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Mackinnon": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Excavator - 250 X3"
+      ]
+    },
+    "Noah": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Frank": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Perry": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Caden": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Shop": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Track Loader"
+      ]
+    }
+  },
+  "2025-08-05": {
+    "Shop": {
+      "task": "",
+      "notes": "Cleaning",
+      "pdf": "",
+      "equipment": []
+    },
+    "Ariel": {
+      "task": "Cleaning",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Excavator - 250 X3"
+      ]
+    },
+    "Frank": {
+      "task": "Cleaning",
+      "notes": "",
+      "pdf": "",
+      "equipment": []
+    },
+    "Miles": {
+      "task": "Cleaning",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Excavator - 250 X4"
+      ]
+    },
+    "Mike": {
+      "task": "Cleaning",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Tandem - #20"
+      ]
+    },
+    "Mackinnon": {
+      "task": "",
+      "notes": "",
+      "pdf": "",
+      "equipment": [
+        "Gas Chevrolet C/w Trailer",
+        "2025 Ford C/w Trailer",
+        "Ford F-250"
+      ]
     }
   }
 }
