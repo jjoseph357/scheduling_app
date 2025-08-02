@@ -7,8 +7,45 @@ document.addEventListener('DOMContentLoaded', function() {
     let scheduleData = {}, isOwner = false, calendar = null; // Add calendar variable here
     
     // --- MASTER DATA ---
-    let names = ["Lyndon", "Jack", "Miles", "Caden", "Mike", "Ariel", "Peter", "Perry", "Grant", "Frank", "Mackinnon", "Noah", "Oscar"];
-    let equipmentList = ["Excavator - 250 X4", "Excavator - 250 X3", "Loader", "Track Loader", "Standard Dodge", "Skidsteer - 590", "Excavator - Mini", "Skidsteer - 770", "Tandem - #15", "Pile Truck", "Excavator - 2800", "Tandem - #1", "Gas Chevrolet C/w Trailer", "Skidsteer - S70", "2025 Ford C/w Trailer", "Tandem - #20", "Ford F-250", "Tandem - #4", "Water and Sewer Truck", "Skidsteer - T250"];
+
+    let names = [
+        "Lyndon",
+        "Jack",
+        "Miles",
+        "Caden",
+        "Mike",
+        "Ariel",
+        "Peter",
+        "Perry",
+        "Grant",
+        "Frank",
+        "Mackinnon",
+        "Noah",
+        "Oscar"
+    ];
+
+    let equipmentList = [
+        "Excavator - 250 X4",
+        "Excavator - 250 X3",
+        "Loader",
+        "Track Loader",
+        "Standard Dodge",
+        "Skidsteer - 590",
+        "Excavator - Mini",
+        "Skidsteer - 770",
+        "Tandem - #15",
+        "Pile Truck",
+        "Excavator - 2800",
+        "Tandem - #1",
+        "Gas Chevrolet C/w Trailer",
+        "Skidsteer - S70",
+        "2025 Ford C/w Trailer",
+        "Tandem - #20",
+        "Ford F-250",
+        "Tandem - #4",
+        "Water and Sewer Truck",
+        "Skidsteer - T250"
+    ];
 
     // --- INITIALIZATION & SCROLLBAR FIX ---
     fetch('schedule.json')
